@@ -122,6 +122,26 @@ module test_routines
 
    end subroutine explicit_local_loop_test
 
+   subroutine deref_default_explicit_local_loop_test( in_data )
+
+       type (data_struct), pointer :: in_data
+
+       real :: tmpReal
+       integer :: dim1Size, dim2Size
+       integer :: iDim1, iDim2
+
+       dim1Size = in_data % dimensionSizes(1)
+       dim2Size = in_data % dimensionSizes(2)
+       tmpReal = in_data % defaultValue
+
+       do iDim1 = 1, dim1Size
+          do iDim2 = 1, dim2Size
+             in_data % data(iDim2, iDim1) = tmpReal
+          end do
+       end do
+
+   end subroutine deref_default_explicit_local_loop_test
+
 end module test_routines
 
 program vector_test
@@ -147,6 +167,7 @@ program vector_test
    call implicit_loop_test( data_ptr1 )
    call explicit_loop_test( data_ptr1 )
    call explicit_local_loop_test( data_ptr1 )
+   call deref_default_explicit_local_loop_test( data_ptr1 )
 
    call deallocate_sub_data( data_ptr1 )
 
