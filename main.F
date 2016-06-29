@@ -6,6 +6,7 @@ module data_types
       real, pointer, dimension(:, :) :: data
       integer, dimension(2) :: dimensionSizes
       real :: defaultValue
+      type (data_struct), pointer :: self_ptr
    end type data_struct
 
    type (data_struct), pointer :: globalStruct
@@ -36,6 +37,8 @@ module setup_routines
       in_data % defaultValue = 0.0
       in_data % dimensionSizes(1) = 300
       in_data % dimensionSizes(2) = 100
+
+      in_data % self_ptr => in_data
 
    end subroutine allocate_data_type
 
