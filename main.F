@@ -1,9 +1,25 @@
+! Define _CONTIG to add the Contiguous attribute
+! Define _CONCUR to use `do concurrent` for vector loops
+
+!#define _CONTIG
+!#define _CONCUR
+
+#ifdef _CONTIG
+
+#define ATTRS , contiguous
+
+#else
+
+#define ATTRS 
+
+#endif
+
 module data_types
    implicit none
    public
 
    type data_struct
-      real, pointer, dimension(:, :) :: data => null()
+      real, dimension(:, :), pointer ATTRS :: data => null()
       integer, dimension(2) :: dimensionSizes
       real :: defaultValue
       type (data_struct), pointer :: self_ptr => null()
@@ -100,9 +116,15 @@ module test_routines
       integer :: iDim1, iDim2
 
       do iDim1 = 1, in_data % dimensionSizes(1)
+#ifdef _CONCUR
+         do concurrent ( iDim2 = 1:in_data % dimensionSizes(2) )
+            in_data % data( iDim2, iDim1 ) = in_data % defaultValue
+         end do
+#else
          do iDim2 = 1, in_data % dimensionSizes(2)
             in_data % data( iDim2, iDim1 ) = in_data % defaultValue
          end do
+#endif
       end do
 
    end subroutine explicit_loop_test
@@ -118,9 +140,15 @@ module test_routines
        dim2Size = in_data % dimensionSizes(2)
 
        do iDim1 = 1, dim1Size
+#ifdef _CONCUR
+          do concurrent ( iDim2 = 1:dim2Size )
+             in_data % data(iDim2, iDim1) = in_data % defaultValue
+          end do
+#else
           do iDim2 = 1, dim2Size
              in_data % data(iDim2, iDim1) = in_data % defaultValue
           end do
+#endif
        end do
 
    end subroutine explicit_local_loop_test
@@ -138,9 +166,15 @@ module test_routines
        tmpReal = in_data % defaultValue
 
        do iDim1 = 1, dim1Size
+#ifdef _CONCUR
+          do concurrent ( iDim2 = 1:dim2Size )
+             in_data % data(iDim2, iDim1) = tmpReal
+          end do
+#else
           do iDim2 = 1, dim2Size
              in_data % data(iDim2, iDim1) = tmpReal
           end do
+#endif
        end do
 
    end subroutine deref_default_explicit_local_loop_test
@@ -149,7 +183,7 @@ module test_routines
 
        type (data_struct), pointer :: in_data
 
-       real, dimension(:, :), pointer :: data_ptr
+       real, dimension(:, :), pointer ATTRS:: data_ptr
        real :: tmpReal
        integer :: dim1Size, dim2Size
        integer :: iDim1, iDim2
@@ -160,9 +194,15 @@ module test_routines
        data_ptr => in_data % data
 
        do iDim1 = 1, dim1Size
+#ifdef _CONCUR
+          do concurrent ( iDim2 = 1:dim2Size )
+             data_ptr(iDim2, iDim1) = tmpReal
+          end do
+#else
           do iDim2 = 1, dim2Size
              data_ptr(iDim2, iDim1) = tmpReal
           end do
+#endif
        end do
 
    end subroutine full_deref_explicit_local_loop_test
