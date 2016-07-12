@@ -1,6 +1,10 @@
 ! Define _CONTIG to add the Contiguous attribute
 ! Define _CONCUR to use `do concurrent` for vector loops
 
+#define DIM1SIZE 10000
+#define DIM2SIZE 100
+#define NUMTESTS 3
+
 !#define _CONTIG
 !#define _CONCUR
 
@@ -48,11 +52,14 @@ module setup_routines
          return
       end if
 
+      write(0, *) ' Allocating DDT'
+
+
       allocate(in_data)
 
       in_data % defaultValue = 0.0
-      in_data % dimensionSizes(1) = 300
-      in_data % dimensionSizes(2) = 100
+      in_data % dimensionSizes(1) = DIM1SIZE
+      in_data % dimensionSizes(2) = DIM2SIZE
 
       in_data % self_ptr => in_data
 
@@ -70,6 +77,7 @@ module setup_routines
          return
       end if
 
+      write(0, *) ' Allocating data pointer within DDT'
       allocate( in_data % data( in_data % dimensionSizes(2), in_data % dimensionSizes(1) ) )
 
    end subroutine allocate_sub_data
@@ -86,6 +94,7 @@ module setup_routines
          return
       end if
 
+      write(0, *) ' Deallocating data pointer within DDT'
       deallocate( in_data % data )
 
    end subroutine deallocate_sub_data
@@ -105,6 +114,7 @@ module test_routines
 
       type ( data_struct ), pointer :: in_data
 
+      write(0, *) ' Performing implicit loop test'
       in_data % data(:, :) = in_data % defaultValue
 
    end subroutine implicit_loop_test
@@ -115,6 +125,7 @@ module test_routines
 
       integer :: iDim1, iDim2
 
+      write(0, *) ' Performing explicit loop test with pointer loop bounds'
       do iDim1 = 1, in_data % dimensionSizes(1)
 #ifdef _CONCUR
          do concurrent ( iDim2 = 1:in_data % dimensionSizes(2) )
@@ -139,6 +150,7 @@ module test_routines
        dim1Size = in_data % dimensionSizes(1)
        dim2Size = in_data % dimensionSizes(2)
 
+      write(0, *) ' Performing explicit loop test with scalar loop bounds'
        do iDim1 = 1, dim1Size
 #ifdef _CONCUR
           do concurrent ( iDim2 = 1:dim2Size )
@@ -165,6 +177,7 @@ module test_routines
        dim2Size = in_data % dimensionSizes(2)
        tmpReal = in_data % defaultValue
 
+      write(0, *) ' Performing explicit loop test with scalar loop bounds and dereferenced default value'
        do iDim1 = 1, dim1Size
 #ifdef _CONCUR
           do concurrent ( iDim2 = 1:dim2Size )
@@ -193,6 +206,7 @@ module test_routines
        tmpReal = in_data % defaultValue
        data_ptr => in_data % data
 
+      write(0, *) ' Performing explicit loop test with scalar loop bounds and dereferenced default value, and references to data pointer instead of DDT'
        do iDim1 = 1, dim1Size
 #ifdef _CONCUR
           do concurrent ( iDim2 = 1:dim2Size )
@@ -219,9 +233,9 @@ program vector_test
 
    type (data_struct), pointer :: data_ptr1
 
-   real :: tmpReal
-   integer :: dimSize1, dimSize2
-   integer :: iDim1, iDim2
+   integer :: testNum
+
+   write(0, *) 'Starting test program'
 
    call allocate_data_type( globalStruct )
 
@@ -229,16 +243,30 @@ program vector_test
 
    call allocate_sub_data( data_ptr1 )
 
-   call implicit_loop_test( data_ptr1 )
-   call explicit_loop_test( data_ptr1 )
-   call explicit_local_loop_test( data_ptr1 )
-   call deref_default_explicit_local_loop_test( data_ptr1 )
-   call full_deref_explicit_local_loop_test( data_ptr1 )
+   write(0, *) ''
+
+   do testNum = 1, NUMTESTS
+
+      write(0, *) 'Performing test # ', testNum
+
+      call implicit_loop_test( data_ptr1 )
+      call explicit_loop_test( data_ptr1 )
+      call explicit_local_loop_test( data_ptr1 )
+      call deref_default_explicit_local_loop_test( data_ptr1 )
+      call full_deref_explicit_local_loop_test( data_ptr1 )
+
+      write(0, *) 'End of test # ', testNum
+
+   end do
+
+   write(0, *) ''
 
    call deallocate_sub_data( data_ptr1 )
 
    nullify( data_ptr1 )
    deallocate( globalStruct )
+
+   write(0, *) ' Finished test program'
 
    stop
 
