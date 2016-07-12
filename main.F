@@ -3,10 +3,10 @@ module data_types
    public
 
    type data_struct
-      real, pointer, dimension(:, :) :: data
+      real, pointer, dimension(:, :) :: data => null()
       integer, dimension(2) :: dimensionSizes
       real :: defaultValue
-      type (data_struct), pointer :: self_ptr
+      type (data_struct), pointer :: self_ptr => null()
    end type data_struct
 
    type (data_struct), pointer :: globalStruct
@@ -149,7 +149,7 @@ module test_routines
 
        type (data_struct), pointer :: in_data
 
-       real, dimension(:, :) , pointer :: data_ptr
+       real, dimension(:, :), pointer :: data_ptr
        real :: tmpReal
        integer :: dim1Size, dim2Size
        integer :: iDim1, iDim2

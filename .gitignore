@@ -1,1 +1,3 @@
 *.o
+*.mod
+run_tests.x
